@@ -8,7 +8,7 @@ int readint(const char* path)
 	FILE* f=fopen(path,"r");
 	if(!f)return LOG('W',"failed to open %s for reading: %d",path,errno),0;
 	char buf[16];
-	fgets(buf,16,f);
+	ignore_result(fgets(buf,16,f));
 	buf[15]=0;
 	fclose(f);
 	return atoi(buf);
@@ -18,7 +18,7 @@ float readfloat(const char* path)
 	FILE* f=fopen(path,"r");
 	if(!f)return LOG('W',"failed to open %s for reading: %d",path,errno),0;
 	char buf[16];
-	fgets(buf,16,f);
+	ignore_result(fgets(buf,16,f));
 	buf[15]=0;
 	fclose(f);
 	return atof(buf);
@@ -28,7 +28,7 @@ std::string readstr(const char* path)
 	FILE* f=fopen(path,"r");
 	if(!f)return LOG('W',"failed to open %s for reading: %d",path,errno),"";
 	char buf[256];
-	fgets(buf,256,f);
+	ignore_result(fgets(buf,256,f));
 	buf[255]=0;
 	fclose(f);
 	return std::string(buf);
@@ -37,7 +37,7 @@ void writeint(const char* path,int v)
 {
 	FILE* f=fopen(path,"w");
 	if(!f){LOG('W',"failed to open %s for writing",path);return;}
-	fprintf(f,"%d",v);
+	ignore_result(fprintf(f,"%d",v));
 	fclose(f);
 }
 std::string trim(std::string s)

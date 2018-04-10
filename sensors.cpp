@@ -103,7 +103,7 @@ void SensorBase::enable_scan_element(std::string elem)
 		),std::make_tuple(idx,elem_base,st)
 	);
 }
-void SensorBase::init(int id,std::string _sensor_basename)
+bool SensorBase::init(int id,std::string _sensor_basename)
 {
 	sysfspath=IIODEV_SYSFS_PATH_BASE+std::to_string(id);
 	devbufpath=DEV_PATH+std::to_string(id);
@@ -123,7 +123,12 @@ void SensorBase::init(int id,std::string _sensor_basename)
 	update_values();
 	enable_buffer();
 	devfd=open(devbufpath.c_str(),O_RDONLY);
-	if(!~devfd)LOG('E',"failed to open the iio buffer device: %s",devbufpath.c_str());
+	if(!~devfd)
+	{
+		LOG('E',"failed to open the iio buffer device: %s",devbufpath.c_str());
+		return 1;
+	}
+	return 0;
 }
 void SensorBase::deinit()
 {

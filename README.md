@@ -8,13 +8,18 @@ This service watches the readings from the ambient light sensor and
 control the backlight of the screen and keyboard. It also creates a
 fifo so that you can adjust relative brightness of the lcd.
 
+It only supports sensors using the industrial I/O bus. It has a generic
+class for working with most types of iio devices though.
+
 The project also demostrates how damn stupid a C++ program could look like.
+
+Hopefully it does not yet hog the CPU.
 
 # Warning
 WIP. Does not yet do any kind of input sanitation. May segmentation fault
 at any time. The author uses Gentoo. _Very_ shitty code.
 
-AS A DAEMON, IT ONLY RUNS AS ROOT!
+As this daemon manipulates sysfs, IT ONLY RUNS AS ROOT!
 
 # Building
 Building _requires_ C++17. Just `mkdir build && cd build && cmake .. && make`.
@@ -23,9 +28,9 @@ Building _requires_ C++17. Just `mkdir build && cd build && cmake .. && make`.
 None. The code documentes itself.
 
 ## fifo usage
-- `u <x,0<x<=100>`  
+- `u [x=5,0<x<=100]`  
 Makes lcd x% brighter.
-- `d <x,0<x<=100>`  
+- `d [x=5,0<x<=100]`  
 Makes lcd x% darker.
 - `s <x,-100<=x<=100>`  
 Set relative brightness of lcd.

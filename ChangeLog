@@ -1,3 +1,8 @@
+2018-04-10 0.0.2
+Hopefully fixed some segmentation faults.
+Added init script for OpenRC.
+Fixed compiler warnings.
+
 2018-04-09 0.0.1
 First public version.
 Almost feature complete. Only works for me though.

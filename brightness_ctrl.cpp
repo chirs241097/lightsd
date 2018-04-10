@@ -21,7 +21,10 @@ void BrightnessControl::_brightness_slide(int p)
 
 void BrightnessControl::init(float initv,SensorALS *s)
 {
-	cur=std::upper_bound(thresh.begin(),thresh.end(),(int)roundf(initv))-thresh.begin();
+	cur=std::upper_bound(thresh.begin(),thresh.end(),(int)roundf(initv))
+		-thresh.begin();
+	if(thresh.size()+1!=value.size())LOG('W',
+		"Size of threshold array should be one more than size of value array",0);
 	als=s;set_offset(0,0);
 }
 void BrightnessControl::set_path(filesystem::path p)
@@ -75,6 +78,7 @@ void BrightnessControl::brightness_slide(int p)
 }
 void BrightnessControl::worker()
 {
+	if(cpath.empty())return;
 	while(1)
 	{
 		std::unique_lock<std::mutex>lock_thresh(threshnotify_m);

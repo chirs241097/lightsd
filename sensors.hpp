@@ -46,7 +46,7 @@ class SensorBase
 		virtual void update_values()=0;
 	public:
 		virtual ~SensorBase(){}
-		void init(int id,std::string _sensor_basename);
+		bool init(int id,std::string _sensor_basename);
 		void deinit();
 		void reset();
 		void worker();

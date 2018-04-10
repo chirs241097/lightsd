@@ -1,0 +1,18 @@
+#!/sbin/openrc-run
+#init script of lightsd for OpenRC
+depend()
+{
+	need sysfs dev-mount
+}
+start()
+{
+	ebegin "Starting lightsd"
+	start-stop-daemon -S -b -m -p /run/lightsd.pid -x /usr/bin/lightsd
+	eend $?
+}
+stop()
+{
+	ebegin "Stopping lightsd"
+	start-stop-daemon -s SIGTERM -p /run/lightsd.pid -x /usr/bin/lightsd
+	eend $?
+}

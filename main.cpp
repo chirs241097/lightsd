@@ -40,7 +40,7 @@ void load_config()
 	char* buf=new char[1024];
 	while(!feof(cfgf))
 	{
-		fgets(buf,1024,cfgf);
+		ignore_result(fgets(buf,1024,cfgf));
 		if(buf[0]=='#')continue;
 		std::string sb=trim(buf);
 		std::vector<std::string> sv;
@@ -94,7 +94,7 @@ int get_gid(std::string group)
 	char* buf=new char[1024];
 	while(!feof(grpf))
 	{
-		fgets(buf,1024,grpf);
+		ignore_result(fgets(buf,1024,grpf));
 		std::vector<std::string> sv;
 		split(buf,':',sv);
 		if(sv[0]==group)
@@ -110,27 +110,38 @@ int get_gid(std::string group)
 }
 void setup_fifo()
 {
-	if(!fifo_path.string().length())return;
-	unlink(fifo_path.c_str());
-	mkfifo(fifo_path.c_str(),0620);
-	chown(fifo_path.c_str(),0,get_gid("video"));
-	chmod(fifo_path.c_str(),0620);
+	if(fifo_path.empty())return;
+	int ret=0;
+	ret|=unlink(fifo_path.c_str());
+	ret|=mkfifo(fifo_path.c_str(),0620);
+	ret|=chown(fifo_path.c_str(),0,get_gid("video"));
+	ret|=chmod(fifo_path.c_str(),0620);
+	if(ret)LOG('W',"Failed to create fifo.",0);
 }
 void command_thread()
 {
+	if(fifo_path.empty())return;
 	fifo_f=fopen(fifo_path.c_str(),"r");
 	char cmdbuf[256];
 	while(1)
 	{
-		fgets(cmdbuf,256,fifo_f);
+		ignore_result(fgets(cmdbuf,256,fifo_f));
 		printf("got command: ");
 		puts(trim(cmdbuf).c_str());
 		std::vector<std::string> cav;
 		split(trim(cmdbuf),' ',cav);
 		if(cav.size()>=1)
 		{
-			if(cav[0]=="u")if(cav.size()>1)lcd.set_offset(1,atoi(cav[1].c_str()));
-			if(cav[0]=="d")if(cav.size()>1)lcd.set_offset(-1,atoi(cav[1].c_str()));
+			if(cav[0]=="u")
+			{
+				if(cav.size()>1)lcd.set_offset(1,atoi(cav[1].c_str()));
+				else lcd.set_offset(1,5);
+			}
+			if(cav[0]=="d")
+			{
+				if(cav.size()>1)lcd.set_offset(-1,atoi(cav[1].c_str()));
+				else lcd.set_offset(-1,5);
+			}
 			if(cav[0]=="s")if(cav.size()>1)lcd.set_offset(0,atoi(cav[1].c_str()));
 			if(cav[0]=="r")lcd.set_offset(0,0);
 		}
@@ -140,17 +151,18 @@ void command_thread()
 }
 void sigterm_handler(int)
 {
-	exit(0);
+	als.quit_worker();
+	_exit(0);
 }
 int main()
 {
 	signal(SIGTERM,sigterm_handler);
 	als_id=SensorBase::detect_sensor("als");
 	if(!~als_id)return puts("No ALS found!"),1;
-	als.init(als_id,"in_intensity");
+	if(als.init(als_id,"in_intensity"))return puts("Failed to initialize sensor."),1;
 	als.set_reader_callback(als_callback);
 	float init_val=als.get_value();
-	printf("initial value: %f lx\n",init_val);
+	//printf("initial value: %f lx\n",init_val);
 	load_config();
 	setup_fifo();
 	lcd.init(init_val,&als);
