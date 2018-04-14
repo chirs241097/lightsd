@@ -5,10 +5,12 @@
 #define log10_n(x) ((x)<1?0:log10(x))
 void BrightnessControl::_brightness_slide(int p)
 {
+	//TODO: mutual exclusion
 	p+=offset;
 	if(p>100)p=100;
 	if(p<0)p=0;
 	int pbr=maxbr*p/100;
+	if(pbr<minabr)pbr=minabr;
 	printf("brightness adjust: %d->%d/%d\n",br,pbr,maxbr);
 	int d=1;if(pbr<br)d=-1;double dd=1;
 	while(d>0&&br+round(d*dd)<=pbr||d<0&&br+round(d*dd)>=pbr)
@@ -39,6 +41,7 @@ void BrightnessControl::set_thresh(std::vector<int> _th){thresh=_th;}
 void BrightnessControl::set_value(std::vector<int> _v){value=_v;}
 void BrightnessControl::set_delay(int _d){delay=_d;}
 void BrightnessControl::set_trigrange(int _tr){tr=_tr;}
+void BrightnessControl::set_minabr(int _mbr){minabr=_mbr;}
 
 void BrightnessControl::set_offset(int rel,int off)
 {
@@ -48,6 +51,12 @@ void BrightnessControl::set_offset(int rel,int off)
 	brightness_slide(value[cur]);
 }
 
+void BrightnessControl::force_adjust()
+{
+	cur=std::upper_bound(thresh.begin(),thresh.end(),(int)roundf(als->get_value()))
+		-thresh.begin();
+	brightness_slide(value[cur]);
+}
 void BrightnessControl::on_sensor_report(float v)
 {
 	int lb=cur>0?thresh[cur-1]:0;
@@ -73,6 +82,7 @@ void BrightnessControl::on_sensor_report(float v)
 }
 void BrightnessControl::brightness_slide(int p)
 {
+	if(cpath.empty())return;
 	std::thread brth(&BrightnessControl::_brightness_slide,std::ref(*this),p);
 	brth.detach();
 }

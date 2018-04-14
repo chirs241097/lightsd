@@ -12,7 +12,7 @@ class BrightnessControl
 private:
 	filesystem::path cpath,brpath,maxbrpath;
 	std::vector<int> thresh,value;
-	int delay,direction,br,maxbr,tr,offset;
+	int delay,direction,br,maxbr,minabr,tr,offset;
 	size_t cur;
 	SensorALS *als;
 	std::mutex interrupt_m,threshnotify_m;
@@ -25,9 +25,11 @@ public:
 	void set_value(std::vector<int> _v);
 	void set_delay(int _d);
 	void set_trigrange(int _tr);
+	void set_minabr(int _mbr);
 	
 	void set_offset(int rel,int off);
 
+	void force_adjust();
 	void on_sensor_report(float v);
 	void brightness_slide(int p);
 	void worker();

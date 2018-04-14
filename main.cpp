@@ -66,6 +66,7 @@ void load_config()
 		}
 		if(sv[0]=="lcd_backlight_control_delay")lcd.set_delay(atoi(sv[1].c_str()));
 		if(sv[0]=="lcd_backlight_trigger_range")lcd.set_trigrange(atoi(sv[1].c_str()));
+		if(sv[0]=="lcd_backlight_min_value")lcd.set_minabr(atoi(sv[1].c_str()));
 		if(sv[0]=="kbd_backlight_thresholds")
 		{
 			std::vector<std::string> vals;
@@ -84,6 +85,7 @@ void load_config()
 		}
 		if(sv[0]=="kbd_backlight_control_delay")kbd.set_delay(atoi(sv[1].c_str()));
 		if(sv[0]=="kbd_backlight_trigger_range")kbd.set_trigrange(atoi(sv[1].c_str()));
+		if(sv[0]=="kbd_backlight_min_value")kbd.set_minabr(atoi(sv[1].c_str()));
 		if(sv[0]=="command_fifo_path")fifo_path=sv[1];
 	}
 	delete[] buf;
@@ -144,6 +146,11 @@ void command_thread()
 			}
 			if(cav[0]=="s")if(cav.size()>1)lcd.set_offset(0,atoi(cav[1].c_str()));
 			if(cav[0]=="r")lcd.set_offset(0,0);
+			if(cav[0]=="f")
+			{
+				lcd.force_adjust();
+				kbd.force_adjust();
+			}
 		}
 		fclose(fifo_f);
 		fifo_f=fopen(fifo_path.c_str(),"r");

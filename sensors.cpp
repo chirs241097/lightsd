@@ -99,7 +99,7 @@ void SensorBase::enable_scan_element(std::string elem)
 	enabled_scan_elem.insert(
 		std::upper_bound(enabled_scan_elem.begin(),enabled_scan_elem.end(),
 			std::make_tuple(idx,elem_base,st),
-			[](const auto&a,const auto&b)->bool{return std::get<0>(a)<std::get<0>(b);}
+			[](const auto&a,const auto&b){return std::get<0>(a)<std::get<0>(b);}
 		),std::make_tuple(idx,elem_base,st)
 	);
 }

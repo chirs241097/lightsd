@@ -1,3 +1,7 @@
+2018-04-14 0.0.3
+Added forced adjustment and minimum brightness.
+Documentation(?)
+
 2018-04-10 0.0.2
 Hopefully fixed some segmentation faults.
 Added init script for OpenRC.
