@@ -1,3 +1,6 @@
+2018-05-05 0.0.3-r1
+No longer using experimental/filesystem as I started using gcc 8.1.
+
 2018-04-14 0.0.3
 Added forced adjustment and minimum brightness.
 Documentation(?)

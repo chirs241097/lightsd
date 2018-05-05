@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <any>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <functional>
 #include <unordered_map>
 #include <tuple>
@@ -12,7 +12,7 @@
 #define IIODEV_SYSFS_PATH_BASE "/sys/bus/iio/devices/iio:device"
 #define DEV_PATH "/dev/iio:device"
 
-namespace filesystem=std::experimental::filesystem::v1;
+namespace filesystem=std::filesystem;
 
 struct scan_t
 {

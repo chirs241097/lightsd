@@ -24,8 +24,7 @@ As this daemon manipulates sysfs, IT ONLY RUNS AS ROOT!
 
 # Dependencies
  - CMake
- - Reasonable new gcc or clang release that support C++17  
-   (Don't use trunk though as I'm still using `std::experimental::filesystem::v1`)
+ - gcc 8.x or clang 6 with C++17 support  
 
 # Building
 Just `mkdir build && cd build && cmake .. && make`.

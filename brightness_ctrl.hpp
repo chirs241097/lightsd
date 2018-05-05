@@ -6,7 +6,6 @@
 #include <thread>
 #include <vector>
 #include "sensor_als.hpp"
-namespace filesystem=std::experimental::filesystem::v1;
 class BrightnessControl
 {
 private:
