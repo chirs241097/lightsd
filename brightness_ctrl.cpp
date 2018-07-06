@@ -5,13 +5,13 @@
 #define log10_n(x) ((x)<1?0:log10(x))
 void BrightnessControl::_brightness_slide(int p)
 {
-	//TODO: mutual exclusion
+	std::lock_guard<std::mutex> adjust_lck(adjust_m);
 	p+=offset;
 	if(p>100)p=100;
 	if(p<0)p=0;
 	int pbr=maxbr*p/100;
 	if(pbr<minabr)pbr=minabr;
-	printf("brightness adjust: %d->%d/%d\n",br,pbr,maxbr);
+	LOG('I',"brightness adjust: %d->%d/%d\n",br,pbr,maxbr);
 	int d=1;if(pbr<br)d=-1;double dd=1;
 	while(d>0&&br+round(d*dd)<=pbr||d<0&&br+round(d*dd)>=pbr)
 	{
@@ -114,7 +114,6 @@ void BrightnessControl::worker()
 			--cur;lb=cur>0?thresh[cur-1]:0;
 			ub=thresh[cur];
 		}
-		printf("%f lx\n",val);
 		brightness_slide(value[cur]);
 	}
 }

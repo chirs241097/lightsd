@@ -124,16 +124,14 @@ bool SensorBase::init(int id,std::string _sensor_basename)
 	enable_buffer();
 	devfd=open(devbufpath.c_str(),O_RDONLY);
 	if(!~devfd)
-	{
-		LOG('E',"failed to open the iio buffer device: %s",devbufpath.c_str());
-		return 1;
-	}
+		return LOG('E',"failed to open the iio buffer device: %s",devbufpath.c_str()),1;
 	return 0;
 }
 void SensorBase::deinit()
 {
 	if(~devfd)close(devfd);
 	devfd=-1;
+	//...also disable iio buffers?
 }
 void SensorBase::reset()
 {

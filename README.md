@@ -12,7 +12,8 @@ fifo so that you can adjust relative brightness of the lcd.
 It only supports sensors using the industrial I/O bus. It has a generic
 class for working with most types of iio devices though.
 
-The project also demostrates how damn stupid a C++ program could look like.
+The project also demostrates how damn stupid a C++ program could look like
+(not yet to its maximum extent).
 
 Hopefully it does not yet hog the CPU.
 
@@ -46,11 +47,26 @@ Makes lcd x% darker.
 Sets relative brightness of lcd.
 - `r`  
 Resets relative brightness of lcd, equivalent to `s 0`.
-- `f`
+- `f`  
 Forces an adjustment to be made. You may want to call this when the lid
-is being opened.
+is being opened in order to turn on the keyboard backlight.
 
-The fifo is owned by `root:video` and has permission `0620` so that
+Not implemented:
+- `m`  
+Disables automatic brightness. (\_M\_anual)  
+Some of the commands (r/s/f) does nothing in manual brightness mode.
+- `a`  
+Enables automatic brightness.
+- `i`  
+Print current status to stdout. Example output:
+```
+Mode: <Automatic|Manual>
+ALS value: <%f|-->
+Display brightness: %d%% [(+%d%%)]
+Keyboard backlight brightness: %d%%
+```
+
+The fifo is owned by `root:video` and has permission `0220` so that
 everyone in the video group could potentially mess with your brightness.
 Surprise!
 
@@ -66,4 +82,4 @@ Surprise!
  - use iio triggers instead?
  - auto orientation using accelerometer?
  - hogging cpu and battery?
- - ability to order pizza?
+ - ability to embed an email client and to order pizza?

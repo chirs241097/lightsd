@@ -29,6 +29,14 @@ void als_callback(SensorBase* _s)
 	lcd.on_sensor_report(val);
 	kbd.on_sensor_report(val);
 }
+std::vector<int> numlist2vec(std::string l)
+{
+	std::vector<std::string> v;
+	split(l,',',v);
+	std::vector<int> r;
+	for(auto&i:v)r.push_back(atoi(i.c_str()));
+	return r;
+}
 void load_config()
 {
 	fifo_path="/tmp/lightsd.cmd.fifo";
@@ -36,7 +44,7 @@ void load_config()
 	cfgf=fopen("/etc/lightsd.conf","r");
 	if(!cfgf)
 	cfgf=fopen("lightsd.conf","r");
-	if(!cfgf){LOG('W',"Configuration file not found.",0);return;}
+	if(!cfgf)return (void)LOG('W',"Configuration file not found.",0);
 	char* buf=new char[1024];
 	while(!feof(cfgf))
 	{
@@ -48,41 +56,13 @@ void load_config()
 		if(sv.size()!=2)continue;
 		if(sv[0]=="lcd_backlight_control")lcd.set_path(sv[1]);
 		if(sv[0]=="kbd_backlight_control")kbd.set_path(sv[1]);
-		if(sv[0]=="lcd_backlight_thresholds")
-		{
-			std::vector<std::string> vals;
-			split(sv[1],',',vals);
-			std::vector<int> t;
-			for(auto&i:vals)t.push_back(atoi(i.c_str()));
-			lcd.set_thresh(t);
-		}
-		if(sv[0]=="lcd_backlight_values")
-		{
-			std::vector<std::string> vals;
-			split(sv[1],',',vals);
-			std::vector<int> t;
-			for(auto&i:vals)t.push_back(atoi(i.c_str()));
-			lcd.set_value(t);
-		}
+		if(sv[0]=="lcd_backlight_thresholds")lcd.set_thresh(numlist2vec(sv[1]));
+		if(sv[0]=="lcd_backlight_values")lcd.set_value(numlist2vec(sv[1]));
 		if(sv[0]=="lcd_backlight_control_delay")lcd.set_delay(atoi(sv[1].c_str()));
 		if(sv[0]=="lcd_backlight_trigger_range")lcd.set_trigrange(atoi(sv[1].c_str()));
 		if(sv[0]=="lcd_backlight_min_value")lcd.set_minabr(atoi(sv[1].c_str()));
-		if(sv[0]=="kbd_backlight_thresholds")
-		{
-			std::vector<std::string> vals;
-			split(sv[1],',',vals);
-			std::vector<int> t;
-			for(auto&i:vals)t.push_back(atoi(i.c_str()));
-			kbd.set_thresh(t);
-		}
-		if(sv[0]=="kbd_backlight_values")
-		{
-			std::vector<std::string> vals;
-			split(sv[1],',',vals);
-			std::vector<int> t;
-			for(auto&i:vals)t.push_back(atoi(i.c_str()));
-			kbd.set_value(t);
-		}
+		if(sv[0]=="kbd_backlight_thresholds")kbd.set_thresh(numlist2vec(sv[1]));
+		if(sv[0]=="kbd_backlight_values")kbd.set_value(numlist2vec(sv[1]));
 		if(sv[0]=="kbd_backlight_control_delay")kbd.set_delay(atoi(sv[1].c_str()));
 		if(sv[0]=="kbd_backlight_trigger_range")kbd.set_trigrange(atoi(sv[1].c_str()));
 		if(sv[0]=="kbd_backlight_min_value")kbd.set_minabr(atoi(sv[1].c_str()));
@@ -114,10 +94,10 @@ void setup_fifo()
 {
 	if(fifo_path.empty())return;
 	int ret=0;
-	ret|=unlink(fifo_path.c_str());
-	ret|=mkfifo(fifo_path.c_str(),0620);
+	unlink(fifo_path.c_str());
+	ret|=mkfifo(fifo_path.c_str(),0220);
 	ret|=chown(fifo_path.c_str(),0,get_gid("video"));
-	ret|=chmod(fifo_path.c_str(),0620);
+	ret|=chmod(fifo_path.c_str(),0220);
 	if(ret)LOG('W',"Failed to create fifo.",0);
 }
 void command_thread()
@@ -128,8 +108,7 @@ void command_thread()
 	while(1)
 	{
 		ignore_result(fgets(cmdbuf,256,fifo_f));
-		printf("got command: ");
-		puts(trim(cmdbuf).c_str());
+		LOG('I',"got command: %s",trim(cmdbuf).c_str());
 		std::vector<std::string> cav;
 		split(trim(cmdbuf),' ',cav);
 		if(cav.size()>=1)
@@ -169,7 +148,6 @@ int main()
 	if(als.init(als_id,"in_intensity"))return puts("Failed to initialize sensor."),1;
 	als.set_reader_callback(als_callback);
 	float init_val=als.get_value();
-	//printf("initial value: %f lx\n",init_val);
 	load_config();
 	setup_fifo();
 	lcd.init(init_val,&als);

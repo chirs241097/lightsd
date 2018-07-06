@@ -2,8 +2,9 @@
 #define BRIGHTNESS_CTRL_HPP
 #include <chrono>
 #include <condition_variable>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <thread>
+#include <mutex>
 #include <vector>
 #include "sensor_als.hpp"
 class BrightnessControl
@@ -14,7 +15,7 @@ private:
 	int delay,direction,br,maxbr,minabr,tr,offset;
 	size_t cur;
 	SensorALS *als;
-	std::mutex interrupt_m,threshnotify_m;
+	std::mutex interrupt_m,threshnotify_m,adjust_m;
 	std::condition_variable interrupt,threshnotify;
 	void _brightness_slide(int p);
 public:

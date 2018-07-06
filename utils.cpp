@@ -23,15 +23,17 @@ float readfloat(const char* path)
 	fclose(f);
 	return atof(buf);
 }
-std::string readstr(const char* path)
+std::string readstr(const char* path,int max_length)
 {
 	FILE* f=fopen(path,"r");
 	if(!f)return LOG('W',"failed to open %s for reading: %d",path,errno),"";
-	char buf[256];
-	ignore_result(fgets(buf,256,f));
-	buf[255]=0;
+	char* buf=new char[max_length+1];
+	ignore_result(fgets(buf,max_length+1,f));
+	buf[max_length]=0;
 	fclose(f);
-	return std::string(buf);
+	std::string ret(buf);
+	delete buf;
+	return ret;
 }
 void writeint(const char* path,int v)
 {
