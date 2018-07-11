@@ -3,7 +3,7 @@
 `lightsd` is a small daemon to make the ambient light sensor on your
 ~~(actually, my)~~ laptop useful in Linux <sup>interjection</sup>
 without using a full desktop environment (or `systemd`). It even works
-in a tty!
+in a framebuffer console!
 
 This daemon watches the reading from the ambient light sensor and
 controls the backlight of the screen and keyboard. It also creates a
@@ -18,9 +18,8 @@ The project also demostrates how damn stupid a C++ program could look like
 Hopefully it does not yet hog the CPU.
 
 # Warning
-WIP. May segmentation fault at any time. The author uses Gentoo. _Very_
-shitty code (I admit my code style is crap). The implementation is shitty
-too (it works nevertheless).
+Alpha quality. May segmentation fault at any time. Featuring my terrible
+code style. Ugly implementation (it works nevertheless).
 
 As this daemon manipulates sysfs, IT ONLY RUNS AS ROOT!
 
@@ -102,12 +101,12 @@ action=echo f > /tmp/lightsd.cmd.fifo
 # To-do
  - Less segmentation faults (already eliminated in my daily usage)
  - Less data races (???)
- - Input sanitation (partially)
+ - Input sanitation (partially done)
  - Actual, _real_ logging: not printf'ing to `stdout`. (probably done)
  - More commands: disabling auto adjustment, set absolute brightness etc. (done)
  - Change configuration format so that one can control something other than
-   screen backlight and keyboard backlight? (does anybody actually use it?)
- - auto orientation using accelerometer? (otherwise my `Sensor` class is a waste)
+   screen backlight and keyboard backlight? (will anybody actually use it?)
+ - auto orientation using accelerometer? (otherwise my `Sensor` class is a waste /s)
  - hogging cpu and battery? (oh no)
  - triggers custom scripts? (detonate your computer once the reading reaches a
    certain value?)

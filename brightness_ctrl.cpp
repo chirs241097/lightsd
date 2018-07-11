@@ -70,10 +70,9 @@ void BrightnessControl::set_frozen(bool frozen)
 int BrightnessControl::get_offset(){return offset;}
 int BrightnessControl::get_brightness()
 {
-	//FIXME??: On some devices there are EC-controlled key combinations
+	//On some devices there are EC-controlled key combinations
 	//that bypasses lightsd entirely (e.g. Fn+Space on ThinkPad for
-	//keyboard backlight). So we may have to turn to sysfs for this...
-	//Screw it, just read from sysfs.
+	//keyboard backlight). So we have to turn to sysfs for the real value...
 	if(brpath.empty())return 0;
 	return round(readint(brpath.c_str())*100./maxbr);
 }

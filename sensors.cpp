@@ -94,7 +94,7 @@ void SensorBase::enable_scan_element(std::string elem)
 	path elem_type_path=sysfspath/"scan_elements"/(elem_base+"_type");
 	std::string ts;dict[elem_base+"_type"]=ts=readstr(elem_type_path.c_str());
 	scan_t st;parse_type_string(ts,&st);
-	readsize+=st.storagebits/8;//assume this shit is aligned to byte
+	readsize+=st.storagebits/8;//assume this is aligned to byte
 
 	path elem_en_path=sysfspath/"scan_elements"/(elem_base+"_en");
 	writeint(elem_en_path.c_str(),1);
@@ -126,6 +126,7 @@ bool SensorBase::init(int id,std::string _sensor_basename)
 	path offset_path=sysfspath/(sensor_basename+"_offset");
 	dict[sensor_basename+"_offset"]=readfloat(offset_path.c_str());
 
+	reset();
 	ignore_result(pipe(qpipe));
 	enabled_scan_elem.clear();
 	enable_scan_elements();
@@ -140,7 +141,6 @@ void SensorBase::deinit()
 {
 	if(~devfd)close(devfd);
 	devfd=-1;
-	//...also disable iio buffers?
 }
 void SensorBase::reset()
 {

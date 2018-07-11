@@ -177,7 +177,7 @@ void command_thread()
 				printf(manualmode?"ALS value: --\n":"ALS value: %.2f\n",als.get_value());
 				printf("Display brightness: %d%%",lcd.get_brightness());
 				if(!manualmode&&lcd.get_offset())printf(" (+%d%%)\n",lcd.get_offset());else putchar('\n');
-				//TODO: check for existance
+				//TODO: do not print this if keyboard backlight is not managed
 				printf("Keyboard backlight: %d%%\n",kbd.get_brightness());
 			}
 			if(cav[0]=="q")
