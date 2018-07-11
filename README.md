@@ -5,12 +5,12 @@
 without using a full desktop environment (or `systemd`). It even works
 in a tty!
 
-This service watches the reading from the ambient light sensor and
-control the backlight of the screen and keyboard. It also creates a
-fifo so that you can adjust relative brightness of the lcd.
+This daemon watches the reading from the ambient light sensor and
+controls the backlight of the screen and keyboard. It also creates a
+fifo so that you can adjust relative brightness of the screen.
 
 It only supports sensors using the industrial I/O bus. It has a generic
-class for working with most types of iio devices though.
+class for working with many types of iio devices though.
 
 The project also demostrates how damn stupid a C++ program could look like
 (not yet to its maximum extent).
@@ -89,8 +89,9 @@ event=video/brightnessup
 action=echo u 5 > /tmp/lightsd.cmd.fifo
 ```
 
-If your laptop turns keyboard backlight automatically when closing the lid,
-you may also want the following:
+If your laptop turns keyboard backlight off automatically when closing the
+lid (which I believe is what most laptops do), you may also want the
+following to turn it back on when you open the lid:
 
 `/etc/acpi/events/lid-open`:
 ```
