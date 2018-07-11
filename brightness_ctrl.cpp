@@ -1,3 +1,5 @@
+//Chris Xiong 2018
+//3-Clause BSD License
 #include "brightness_ctrl.hpp"
 #include "utils.hpp"
 #include <cmath>
@@ -11,7 +13,7 @@ void BrightnessControl::_brightness_slide(int p)
 	if(p<0)p=0;
 	int pbr=maxbr*p/100;
 	if(pbr<minabr)pbr=minabr;
-	LOG('I',"brightness adjust: %d->%d/%d\n",br,pbr,maxbr);
+	LOG('I',"brightness adjust: %d->%d/%d",br,pbr,maxbr);
 	int d=1;if(pbr<br)d=-1;double dd=1;
 	while(d>0&&br+round(d*dd)<=pbr||d<0&&br+round(d*dd)>=pbr)
 	{
@@ -37,8 +39,8 @@ void BrightnessControl::set_path(filesystem::path p)
 	maxbr=readint(maxbrpath.c_str());
 	br=readint(brpath.c_str());
 }
-void BrightnessControl::set_thresh(std::vector<int> _th){thresh=_th;}
-void BrightnessControl::set_value(std::vector<int> _v){value=_v;}
+void BrightnessControl::set_thresh(const std::vector<int> &_th){thresh=_th;}
+void BrightnessControl::set_value(const std::vector<int> &_v){value=_v;}
 void BrightnessControl::set_delay(int _d){delay=_d;}
 void BrightnessControl::set_trigrange(int _tr){tr=_tr;}
 void BrightnessControl::set_minabr(int _mbr){minabr=_mbr;}
@@ -49,6 +51,31 @@ void BrightnessControl::set_offset(int rel,int off)
 	if(offset>100)offset=100;
 	if(offset<-100)offset=-100;
 	brightness_slide(value[cur]);
+}
+void BrightnessControl::set_frozen(bool frozen)
+{
+	if(frozen)
+	{
+		doffset=offset;
+		offset=value[cur]+offset;
+		if(offset>100)offset=100;
+		if(offset<0)offset=0;
+	}
+	else
+	{
+		offset=doffset;
+		force_adjust();
+	}
+}
+int BrightnessControl::get_offset(){return offset;}
+int BrightnessControl::get_brightness()
+{
+	//FIXME??: On some devices there are EC-controlled key combinations
+	//that bypasses lightsd entirely (e.g. Fn+Space on ThinkPad for
+	//keyboard backlight). So we may have to turn to sysfs for this...
+	//Screw it, just read from sysfs.
+	if(brpath.empty())return 0;
+	return round(readint(brpath.c_str())*100./maxbr);
 }
 
 void BrightnessControl::force_adjust()

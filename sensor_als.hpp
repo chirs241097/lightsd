@@ -1,3 +1,5 @@
+//Chris Xiong 2018
+//3-Clause BSD License
 #ifndef SENSOR_ALS_HPP
 #define SENSOR_ALS_HPP
 #include "sensors.hpp"

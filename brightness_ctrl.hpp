@@ -1,3 +1,5 @@
+//Chris Xiong 2018
+//3-Clause BSD License
 #ifndef BRIGHTNESS_CTRL_HPP
 #define BRIGHTNESS_CTRL_HPP
 #include <chrono>
@@ -13,6 +15,7 @@ private:
 	filesystem::path cpath,brpath,maxbrpath;
 	std::vector<int> thresh,value;
 	int delay,direction,br,maxbr,minabr,tr,offset;
+	int doffset;
 	size_t cur;
 	SensorALS *als;
 	std::mutex interrupt_m,threshnotify_m,adjust_m;
@@ -21,13 +24,16 @@ private:
 public:
 	void init(float initv,SensorALS *s);
 	void set_path(filesystem::path p);
-	void set_thresh(std::vector<int> _th);
-	void set_value(std::vector<int> _v);
+	void set_thresh(const std::vector<int> &_th);
+	void set_value(const std::vector<int> &_v);
 	void set_delay(int _d);
 	void set_trigrange(int _tr);
 	void set_minabr(int _mbr);
 	
 	void set_offset(int rel,int off);
+	void set_frozen(bool frozen);
+	int get_offset();
+	int get_brightness();
 
 	void force_adjust();
 	void on_sensor_report(float v);

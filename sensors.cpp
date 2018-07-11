@@ -1,7 +1,11 @@
+//Chris Xiong 2018
+//3-Clause BSD License
 #include <cstdio>
 #include <cstring>
 #include <variant>
+#include <thread>
 #include <sys/types.h>
+#include <poll.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "utils.hpp"
@@ -25,47 +29,52 @@ void SensorBase::parse_type_string(std::string type,scan_t* ti)
 }
 void SensorBase::readbuffer()
 {
+	pollfd p[2];
+	p[0]=pollfd{devfd,POLLIN,0};
+	p[1]=pollfd{qpipe[0],POLLIN,0};
+	if(poll(p,2,-1)<=0)return;
 	char* buf=new char[readsize];
+	if(p[1].revents&POLLIN)
+	{
+		ignore_result(read(qpipe[0],buf,readsize));
+		delete[] buf;
+		return;
+	}
 	ssize_t sz=read(devfd,buf,readsize);
-	if(sz==readsize)
+	if(sz==readsize&&!paused)
 	{
 		char *p=buf;
 		for(int i=0;p-buf<readsize;++i)
 		{
 			scan_t ti=std::get<scan_t>(enabled_scan_elem[i]);
 			std::string es=std::get<std::string>(enabled_scan_elem[i])+"_value";
-			if(ti.is_le)
+			std::vector<char> pp(p,p+ti.storagebits/8);
+			if(ti.is_le^PLATFORM_IS_LITTLEENDIAN)
+			std::reverse(pp.begin(),pp.end());
+			auto readint=[&](auto t){
+				memcpy(&t,pp.data(),ti.storagebits/8);
+				t>>=ti.shift;dict[es]=t;
+			};
 			switch(ti.storagebits)
 			{
 				case 8:
-					if(ti.is_signed)
-					{int8_t t;memcpy(&t,p,1);t>>=ti.shift;dict[es]=t;}
-					else
-					{uint8_t t;memcpy(&t,p,1);t>>=ti.shift;dict[es]=t;}
-					++p;
+					if(ti.is_signed)readint(int8_t(0));
+					else readint(uint8_t(0));
 				break;
 				case 16:
-					if(ti.is_signed)
-					{int16_t t;memcpy(&t,p,2);t>>=ti.shift;dict[es]=t;}
-					else
-					{uint16_t t;memcpy(&t,p,2);t>>=ti.shift;dict[es]=t;}
-					p+=2;
+					if(ti.is_signed)readint(int16_t(0));
+					else readint(uint16_t(0));
 				break;
 				case 32:
-					if(ti.is_signed)
-					{int32_t t;memcpy(&t,p,4);t>>=ti.shift;dict[es]=t;}
-					else
-					{uint32_t t;memcpy(&t,p,4);t>>=ti.shift;dict[es]=t;}
-					p+=4;
+					if(ti.is_signed)readint(int32_t(0));
+					else readint(uint32_t(0));
 				break;
 				case 64:
-					if(ti.is_signed)
-					{int64_t t;memcpy(&t,p,8);t>>=ti.shift;dict[es]=t;}
-					else
-					{uint64_t t;memcpy(&t,p,8);t>>=ti.shift;dict[es]=t;}
-					p+=8;
+					if(ti.is_signed)readint(int64_t(0));
+					else readint(uint64_t(0));
 				break;
 			}
+			p+=ti.storagebits/8;
 		}
 	}
 	delete[] buf;
@@ -95,7 +104,7 @@ void SensorBase::enable_scan_element(std::string elem)
 	
 	path raw_val_path=sysfspath/(elem_base+"_raw");//initial value
 	dict[elem_base+"_value"]=readint(raw_val_path.c_str());
-	
+
 	enabled_scan_elem.insert(
 		std::upper_bound(enabled_scan_elem.begin(),enabled_scan_elem.end(),
 			std::make_tuple(idx,elem_base,st),
@@ -117,7 +126,7 @@ bool SensorBase::init(int id,std::string _sensor_basename)
 	path offset_path=sysfspath/(sensor_basename+"_offset");
 	dict[sensor_basename+"_offset"]=readfloat(offset_path.c_str());
 
-	readsize=0;
+	ignore_result(pipe(qpipe));
 	enabled_scan_elem.clear();
 	enable_scan_elements();
 	update_values();
@@ -148,12 +157,48 @@ void SensorBase::worker()
 {
 	for(workerquit=0;!workerquit;)
 	{
-		readbuffer();update_values();
+		read_m.lock();
+		readbuffer();
+		read_m.unlock();
+		update_values();
 		if(readercb!=nullptr)readercb(this);
 	}
+	deinit();
 }
 void SensorBase::quit_worker()
-{workerquit=1;}
+{
+	workerquit=1;
+	ignore_result(write(qpipe[1],"q",1));
+	close(qpipe[1]);
+}
+void SensorBase::pause_worker()
+{
+	if(~devfd)
+	{
+		paused=1;
+		while(!read_m.try_lock())//just spin lock, I don't care
+		{
+			ignore_result(write(qpipe[1],"p",1));
+			std::this_thread::yield();
+		}
+		close(devfd);
+		devfd=-1;
+	}
+}
+void SensorBase::resume_worker()
+{
+	for(auto&i:enabled_scan_elem)//update readings
+	{
+		std::string& elem_base=std::get<1>(i);
+		filesystem::path raw_val_path=sysfspath/(elem_base+"_raw");
+		dict[elem_base+"_value"]=readint(raw_val_path.c_str());
+	}
+	devfd=open(devbufpath.c_str(),O_RDONLY);
+	if(!~devfd)
+		return (void)LOG('E',"failed to open the iio buffer device: %s",devbufpath.c_str());
+	paused=0;
+	read_m.unlock();
+}
 void SensorBase::set_reader_callback(std::function<void(SensorBase*)> cb)
 {readercb=cb;}
 std::string SensorBase::get_type(int id)

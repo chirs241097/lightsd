@@ -1,3 +1,5 @@
+//Chris Xiong 2018
+//3-Clause BSD License
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
@@ -17,6 +19,7 @@
 #include "brightness_ctrl.hpp"
 SensorALS als;
 int als_id;
+bool manualmode;
 
 filesystem::path fifo_path;
 BrightnessControl lcd,kbd;
@@ -90,6 +93,23 @@ int get_gid(std::string group)
 	delete[] buf;
 	return -1;
 }
+void cleanup()
+{
+	als.quit_worker();
+	if(!fifo_path.empty())unlink(fifo_path.c_str());
+}
+void sighandler(int)
+{
+	if(!fifo_path.empty())//command thread *exists*
+	{
+		FILE* tf=fopen(fifo_path.c_str(),"w");
+		fputs("q\n",tf);
+		//let the command thread cleanup
+		fclose(tf);
+	}
+	else
+		cleanup();
+}
 void setup_fifo()
 {
 	if(fifo_path.empty())return;
@@ -98,7 +118,12 @@ void setup_fifo()
 	ret|=mkfifo(fifo_path.c_str(),0220);
 	ret|=chown(fifo_path.c_str(),0,get_gid("video"));
 	ret|=chmod(fifo_path.c_str(),0220);
-	if(ret)LOG('W',"Failed to create fifo.",0);
+	if(ret)
+	{
+		LOG('W',"Failed to create fifo.",0);
+		unlink(fifo_path.c_str());
+		fifo_path="";
+	}
 }
 void command_thread()
 {
@@ -124,37 +149,65 @@ void command_thread()
 				else lcd.set_offset(-1,5);
 			}
 			if(cav[0]=="s")if(cav.size()>1)lcd.set_offset(0,atoi(cav[1].c_str()));
-			if(cav[0]=="r")lcd.set_offset(0,0);
-			if(cav[0]=="f")
+			if(cav[0]=="r"&&!manualmode)lcd.set_offset(0,0);
+			if(cav[0]=="f"&&!manualmode)
 			{
 				lcd.force_adjust();
 				kbd.force_adjust();
+			}
+			if(cav[0]=="m")
+				if(!manualmode)
+				{
+					als.pause_worker();
+					lcd.set_frozen(true);
+					kbd.set_frozen(true);
+					manualmode=true;
+				}
+			if(cav[0]=="a")
+				if(manualmode)
+				{
+					manualmode=false;
+					als.resume_worker();
+					lcd.set_frozen(false);
+					kbd.set_frozen(false);
+				}
+			if(cav[0]=="i")
+			{
+				printf("Mode: %s\n",manualmode?"Manual":"Automatic");
+				printf(manualmode?"ALS value: --\n":"ALS value: %.2f\n",als.get_value());
+				printf("Display brightness: %d%%",lcd.get_brightness());
+				if(!manualmode&&lcd.get_offset())printf(" (+%d%%)\n",lcd.get_offset());else putchar('\n');
+				//TODO: check for existance
+				printf("Keyboard backlight: %d%%\n",kbd.get_brightness());
+			}
+			if(cav[0]=="q")
+			{
+				fclose(fifo_f);
+				cleanup();
+				return;
 			}
 		}
 		fclose(fifo_f);
 		fifo_f=fopen(fifo_path.c_str(),"r");
 	}
 }
-void sigterm_handler(int)
-{
-	als.quit_worker();
-	_exit(0);
-}
 int main()
 {
-	signal(SIGTERM,sigterm_handler);
+	signal(SIGTERM,sighandler);
+	signal(SIGINT,sighandler);
 	als_id=SensorBase::detect_sensor("als");
 	if(!~als_id)return puts("No ALS found!"),1;
 	if(als.init(als_id,"in_intensity"))return puts("Failed to initialize sensor."),1;
 	als.set_reader_callback(als_callback);
 	float init_val=als.get_value();
+	manualmode=false;
 	load_config();
 	setup_fifo();
 	lcd.init(init_val,&als);
 	kbd.init(init_val,&als);
-	std::thread lcd_thread(&BrightnessControl::worker,std::ref(lcd));
-	std::thread kbd_thread(&BrightnessControl::worker,std::ref(kbd));
-	std::thread cmd_thread(command_thread);
+	std::thread (&BrightnessControl::worker,std::ref(lcd)).detach();
+	std::thread (&BrightnessControl::worker,std::ref(kbd)).detach();
+	std::thread (command_thread).detach();
 	als.worker();
-	return 0;
+	_exit(0);
 }

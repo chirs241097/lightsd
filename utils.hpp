@@ -1,3 +1,5 @@
+//Chris Xiong 2018
+//3-Clause BSD License
 #ifndef UTILS_HPP
 #define UTILS_HPP
 #include <string>

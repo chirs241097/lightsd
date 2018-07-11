@@ -1,3 +1,13 @@
+2018-07-11 0.0.5
+Manual mode added.
+Quit gracefully.
+Multiple code clean-ups in the Sensor class.
+
+2018-07-06 0.0.4
+Random code clean-ups.
+Sane logging.
+Change thresholds in the default configuration.
+
 2018-05-05 0.0.3-r1
 No longer using experimental/filesystem as I started using gcc 8.1.
 

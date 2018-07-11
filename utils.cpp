@@ -1,3 +1,5 @@
+//Chris Xiong 2018
+//3-Clause BSD License
 #include <cstdio>
 #include <cstring>
 #include <cerrno>

@@ -1,3 +1,5 @@
+//Chris Xiong 2018
+//3-Clause BSD License
 #include "sensor_als.hpp"
 void SensorALS::enable_scan_elements()
 {
