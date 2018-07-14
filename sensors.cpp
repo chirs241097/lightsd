@@ -152,6 +152,7 @@ void SensorBase::reset()
 	for(auto& ent:filesystem::directory_iterator(sysfspath/"scan_elements"))
 		if(ent.path().string().substr(ent.path().string().length()-3)=="_en")
 		writeint(ent.path().c_str(),0);
+	readsize=0;
 }
 void SensorBase::worker()
 {
@@ -181,18 +182,15 @@ void SensorBase::pause_worker()
 			ignore_result(write(qpipe[1],"p",1));
 			std::this_thread::yield();
 		}
-		close(devfd);
-		devfd=-1;
+		reset();
 	}
 }
 void SensorBase::resume_worker()
 {
-	for(auto&i:enabled_scan_elem)//update readings
-	{
-		std::string& elem_base=std::get<1>(i);
-		filesystem::path raw_val_path=sysfspath/(elem_base+"_raw");
-		dict[elem_base+"_value"]=readint(raw_val_path.c_str());
-	}
+	enabled_scan_elem.clear();
+	enable_scan_elements();
+	update_values();
+	enable_buffer();
 	devfd=open(devbufpath.c_str(),O_RDONLY);
 	if(!~devfd)
 		return (void)LOG('E',"failed to open the iio buffer device: %s",devbufpath.c_str());

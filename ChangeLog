@@ -1,4 +1,7 @@
-2018-07-11 0.0.5-r2
+2018-07-14 0.0.5-r3
+Reset sensor after pausing the sensor worker.
+
+2018-07-14 0.0.5-r2
 Added a simple tool to create a fake sysfs backlight interface
 that invokes external commands.
 Some changes in the utility module to accomodate the new tool.
