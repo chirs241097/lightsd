@@ -4,15 +4,18 @@
 #include <cstring>
 #include <cerrno>
 #include <cctype>
+#include <unistd.h>
+#include <fcntl.h>
 #include "utils.hpp"
 int readint(const char* path)
 {
-	FILE* f=fopen(path,"r");
-	if(!f)return LOG('W',"failed to open %s for reading: %d",path,errno),0;
+	int fd=open(path,O_RDONLY);
+	if(!~fd)return LOG('W',"failed to open %s for reading: %d",path,errno),0;
 	char buf[16];
-	ignore_result(fgets(buf,16,f));
-	buf[15]=0;
-	fclose(f);
+	int l=read(fd,buf,15);
+	if(!~l){close(fd);return 0;}
+	buf[l]=0;
+	close(fd);
 	return atoi(buf);
 }
 float readfloat(const char* path)

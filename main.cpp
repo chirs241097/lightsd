@@ -70,6 +70,7 @@ void load_config()
 		if(sv[0]=="kbd_backlight_trigger_range")kbd.set_trigrange(atoi(sv[1].c_str()));
 		if(sv[0]=="kbd_backlight_min_value")kbd.set_minabr(atoi(sv[1].c_str()));
 		if(sv[0]=="command_fifo_path")fifo_path=sv[1];
+		if(sv[0]=="als_print_value")als.set_debug(sv[1]=="true");
 	}
 	delete[] buf;
 }

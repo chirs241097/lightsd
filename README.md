@@ -23,6 +23,9 @@ code style. Ugly implementation (it works nevertheless).
 
 As this daemon manipulates sysfs, IT ONLY RUNS AS ROOT!
 
+Do not use `lightsd` with GNOME. It has good chance to conflict with GNOME's
+implementation `iio-sensor-proxy`.
+
 # Dependencies
  - CMake
  - gcc 8.x or clang 6 with C++17 support  
