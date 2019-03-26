@@ -107,6 +107,7 @@ action=echo f > /tmp/lightsd.cmd.fifo
  - Input sanitation (partially done)
  - Actual, _real_ logging: not printf'ing to `stdout`. (probably done)
  - More commands: disabling auto adjustment, set absolute brightness etc. (done)
+ - D-Bus interface?
  - Change configuration format so that one can control something other than
    screen backlight and keyboard backlight? (will anybody actually use it?)
  - auto orientation using accelerometer? (otherwise my `Sensor` class is a waste /s)
